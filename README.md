@@ -8,5 +8,7 @@ In this repository we will analyze the transcriptomic profiles from fibroblast f
 - He et al. (2020)
 
 We show that the transcriptomic profile of each of the datasets can be almost identically mapped, considering a set of manually curated markers. In total, we detect 
-three major axes (A, B, C) which replicate in most of the datasets, and 3 minor axes (D, E, F) that are replicated in up to two datasets. For each axes, several clusters are found (A1-A4, B1-B2, B1-B4). 
+three major axes (A, B, C) which replicate in most of the datasets, and 3 minor axes (D, E, F) that are replicated in up to two datasets. For each axes, several clusters are found (A1-A4, B1-B2, B1-B4).
+
+You can find an html version of the notebook [here](https://doi.org/10.5281/zenodo.4017653).
 
