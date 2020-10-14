@@ -3,3 +3,11 @@
 .csv
 .mtx
 .tsv
+.html
+.png
+.log*
+.jpg
+.pdf
+images
+.ipynb_checkpoints
+.nextflow
