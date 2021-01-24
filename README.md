@@ -12,5 +12,6 @@ three major axes (A, B, C) which replicate in most of the datasets, and other mi
 
 You can find an html version of the notebook [here](https://doi.org/10.5281/zenodo.4017653), and AnnData files of the analysis can be found [here](https://zenodo.org/record/4159284#.YAmduNYo9H4). It is possible that some recent parts of the Notebook do not appear in the html file. Those parts are not relevant for the content of the paper.
 
-You can access the paper at the [Journal of Investigative Dermatology](https://doi.org/10.1016/j.jid.2020.11.028).
+You can access the paper at the [Journal of Investigative Dermatology](https://doi.org/10.1016/j.jid.2020.11.028). 
+You can also access the UMAPs of the four datasets [online](https://fb-pop-detection.herokuapp.com/).
 
