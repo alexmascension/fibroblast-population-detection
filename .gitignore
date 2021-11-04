@@ -29,3 +29,6 @@ images
 .nextflow
 Homo_sapiens
 **/*.h5
+**/*.json
+**/*.bus
+**/*.ec
