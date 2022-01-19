@@ -37,3 +37,12 @@ def plot_adata_cluster_properties(dict_cats_clusters={}, dict_datasets={}, what=
                     df_clusters.loc['-'.join(list_adata), cluster] = axis_val
                     
     return df_clusters
+
+
+def clear_adata(adata): 
+    columns = adata.obs.columns
+    del_cols = [i for i in columns if ('cluster_' in i) | ('assigned_cats_' in i) | ('axis_' in i) ]
+    for col in del_cols:
+        del adata.obs[col]
+    
+    return adata
