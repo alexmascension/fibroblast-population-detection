@@ -1,6 +1,19 @@
 import pandas as pd
 import numpy as np
 import scanpy as sc
+import scipy.sparse as spr
+
+df_metadata = pd.read_csv('data/sample_metadata.csv', sep='\t')
+
+def metadata_assignment(adata, author, year, batch, do_return=False, do_sparse=True):
+    adata.obs[df_metadata.columns] = np.tile(df_metadata[(df_metadata.Author == author) & (df_metadata.Year == year) & 
+                                                                 (df_metadata['Internal sample identifier'] == batch)].values, (len(adata), 1))
+    
+    if do_sparse:
+        adata.X = spr.csr_matrix(adata.X)
+        
+    if do_return:
+        return adata
 
 
 def plot_adata_cluster_properties(dict_cats_clusters={}, list_datasets=[], what='presence', cluster_name='cluster', axis_name='axis'):
