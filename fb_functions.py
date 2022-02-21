@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import scanpy as sc
 import scipy.sparse as spr
+import seaborn as sns
 
 df_metadata = pd.read_csv('data/sample_metadata.csv', sep='\t')
 
@@ -172,3 +173,17 @@ def make_gene_scoring_with_expr(value_ref = 'scores', expr_type='expression_grou
         dict_return[cluster] = df_score.sort_values(by='Z', ascending=False)
     
     return dict_return
+
+
+def plot_score_graph(adatax, cluster_column='cluster'):
+    df_cats_own = pd.DataFrame(index=adatax.obs_names, columns=['clusters', 'score'])
+    for cluster in adatax.obs[cluster_column].cat.categories:
+        adata_sub = adatax[adatax.obs[cluster_column] == cluster]
+        try:
+            df_cats_own.loc[adata_sub.obs_names, 'score'] = adata_sub.obs[f'{cluster_column}_{cluster}']
+            df_cats_own.loc[adata_sub.obs_names, 'clusters'] = cluster
+        except:
+            pass
+
+    df_cats_own = df_cats_own.sort_values('clusters')
+    sns.barplot(x='clusters', y='score', data=df_cats_own, palette=adatax.uns['cluster_colors'])
