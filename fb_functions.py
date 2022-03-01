@@ -17,8 +17,12 @@ def metadata_assignment(adata, author, year, batch, do_return=False, do_sparse=T
         return adata
 
 
-def plot_adata_cluster_properties(dict_cats_clusters={}, list_datasets=[], what='presence', cluster_name='cluster', axis_name='axis'):
-    df_cols = [i for i in list(dict_cats_clusters.keys()) if len(i) == 2]
+def plot_adata_cluster_properties(dict_cats_clusters={}, list_datasets=[], what='presence', cluster_name='cluster', axis_name='axis', list_clusters=None):
+    if list_clusters is None:
+        df_cols = [i for i in list(dict_cats_clusters.keys()) if len(i) == 2]
+    else:
+        df_cols = list_clusters
+    
     df_index = []
     for adata in list_datasets:
         df_index.append(f"{adata.obs['Author'].values[0]}-{int(adata.obs['Year'].values[0])}-{'/'.join(adata.obs['Condition'].cat.categories)}")
