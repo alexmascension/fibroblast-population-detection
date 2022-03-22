@@ -190,4 +190,4 @@ def plot_score_graph(adatax, cluster_column='cluster'):
             pass
 
     df_cats_own = df_cats_own.sort_values('clusters')
-    sns.barplot(x='clusters', y='score', data=df_cats_own, palette=adatax.uns['cluster_colors'])
+    sns.barplot(x='clusters', y='score', data=df_cats_own, palette=adata_sub.uns['cluster_colors'])
