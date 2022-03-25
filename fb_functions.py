@@ -191,3 +191,18 @@ def plot_score_graph(adatax, cluster_column='cluster'):
 
     df_cats_own = df_cats_own.sort_values('clusters')
     sns.barplot(x='clusters', y='score', data=df_cats_own, palette=adatax.uns[f'{cluster_column}_colors'])
+    
+
+def plot_UMAPS_gene(gene, list_datasets, list_names, n_cols=5, n_rows=4):
+    fig, axs = plt.subplots(n_rows, n_cols, figsize=(n_cols * 4, n_rows * 4))
+
+    for ax in axs.ravel():
+        ax.set_axis_off()
+
+    for adata, name, idx in zip(list_datasets, list_names, range(len(list_datasets))):
+        try:
+            sc.pl.umap(adata, color=[gene], legend_loc='on data', show=False, ax = axs.ravel()[idx], 
+                       title=name, size=15, cmap=magma, frameon=False, use_raw=False)
+        except:
+            ...
+            
