@@ -36,3 +36,4 @@ Homo_sapiens
 **/*.ods
 **/*.xlsx
 **/*.Rdata
+**/*.rpt
