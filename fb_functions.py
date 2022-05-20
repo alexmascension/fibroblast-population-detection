@@ -3,8 +3,17 @@ import numpy as np
 import scanpy as sc
 import scipy.sparse as spr
 import seaborn as sns
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+import math
+import matplotlib.cm as cm
+
 
 df_metadata = pd.read_csv('data/sample_metadata.csv', sep='\t')
+
+magma = [plt.get_cmap('magma')(i) for i in np.linspace(0,1, 80)]
+magma[0] = (0.88, 0.88, 0.88, 1)
+magma = mpl.colors.LinearSegmentedColormap.from_list("", magma[:65])
 
 def metadata_assignment(adata, author, year, batch, do_return=False, do_sparse=True):
     adata.obs[df_metadata.columns] = np.tile(df_metadata[(df_metadata.Author == author) & (df_metadata.Year == year) & 
@@ -193,7 +202,10 @@ def plot_score_graph(adatax, cluster_column='cluster'):
     sns.barplot(x='clusters', y='score', data=df_cats_own, palette=adatax.uns[f'{cluster_column}_colors'])
     
 
-def plot_UMAPS_gene(gene, list_datasets, list_names, n_cols=5, n_rows=4):
+def plot_UMAPS_gene(gene, list_datasets, list_names, n_cols=5, n_rows=None):
+    if n_rows is None:
+        n_rows = int(math.ceil(len(list_datasets) / n_cols))
+        
     fig, axs = plt.subplots(n_rows, n_cols, figsize=(n_cols * 4, n_rows * 4))
 
     for ax in axs.ravel():
@@ -206,3 +218,58 @@ def plot_UMAPS_gene(gene, list_datasets, list_names, n_cols=5, n_rows=4):
         except:
             ...
             
+
+def make_dicts_fraction_mean(genes, list_names, list_all_datasets, list_accepted_clusters, clusterby='cluster_robust'):
+    dict_fraction_cells = {gene: pd.DataFrame(np.nan, index=list_names, columns=list_accepted_clusters) for gene in genes}
+    dict_mean_exp = {gene: pd.DataFrame(np.nan, index=list_names, columns=list_accepted_clusters) for gene in genes}
+
+    for adata, name in zip(list_all_datasets, list_names):
+        genes_sub = [i for i in genes if i in adata.var_names]
+        for cluster in set(adata.obs[clusterby]):
+            counts = adata[adata.obs[clusterby] == cluster][:, genes_sub].X.toarray().copy()
+            counts_frac = (counts > 0).sum(0) / counts.shape[0]
+            counts[counts == 0] = np.nan
+            counts_mean_exp = np.nanmean(counts, 0)
+
+            for idx, gene in enumerate(genes_sub):
+                dict_fraction_cells[gene].loc[name, cluster] = counts_frac[idx]
+                dict_mean_exp[gene].loc[name, cluster] = counts_mean_exp[idx]
+
+    for gene in genes:
+        dict_fraction_cells_mean, dict_fraction_cells_std =  dict_fraction_cells[gene].mean(),  dict_fraction_cells[gene].std()
+        dict_mean_exp_mean, dict_mean_exp_std =  dict_mean_exp[gene].mean(),  dict_mean_exp[gene].std()
+
+        dict_fraction_cells[gene].loc['Mean'] = dict_fraction_cells_mean
+        dict_fraction_cells[gene].loc['Std'] = dict_fraction_cells_std
+        dict_mean_exp[gene].loc['Mean'] = dict_mean_exp_mean
+        dict_mean_exp[gene].loc['Std'] = dict_mean_exp_std
+
+        dict_fraction_cells[gene] = dict_fraction_cells[gene][list_accepted_clusters]
+        dict_mean_exp[gene] = dict_mean_exp[gene][list_accepted_clusters]
+    
+    return dict_fraction_cells, dict_mean_exp
+
+
+def plot_dotplot_gene(gene, dict_fraction_cells, dict_mean_exp, rotate=False):
+    dfplot_frac = dict_fraction_cells[gene] ** 0.66
+    dfplot_exp = dict_mean_exp[gene] 
+    exp_norm_vals = (dfplot_exp.loc['Mean'] - min(dfplot_exp.loc['Mean'])) / (max(dfplot_exp.loc['Mean']) - min(dfplot_exp.loc['Mean']))
+    fig, ax = plt.subplots(1, 1, figsize=(10, 1))
+    ax.set_xticks(range(len(dfplot_frac.columns)))
+    
+    if rotate:
+        ax.set_xticklabels(dfplot_frac.columns, rotation=40, ha='right')
+    else:
+        ax.set_xticklabels(dfplot_frac.columns)
+    
+    ax.set_yticks([0])
+    ax.set_yticklabels([gene])
+    ax.set_ylim([-0.1, 0.1])
+    plt.scatter(range(len(dfplot_frac.columns)), [0] * len(dfplot_frac.columns), s=dfplot_frac.loc['Mean'] * 550, c=[cm.OrRd(i) for i in exp_norm_vals], 
+                linewidths=0.5, edgecolor='#878787', alpha = [max(0, i) for i in 1 - dict_fraction_cells[gene].loc['Std'] ** 0.75])
+    
+    plt.plot([-0.3, len(dfplot_frac.columns) - 0.3], [0, 0], c="#676767", linewidth=0.7, alpha=0.3)
+    plt.plot([-0.3, len(dfplot_frac.columns) - 0.3], [0.025, 0.025], c="#676767", linewidth=0.7, alpha=0.3)
+    plt.plot([-0.3, len(dfplot_frac.columns) - 0.3], [-0.025, -0.025], c="#676767", linewidth=0.7, alpha=0.3)
+    
+
