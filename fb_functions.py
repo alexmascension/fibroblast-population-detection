@@ -149,7 +149,8 @@ def make_gene_scoring(list_datasets=[], calculate_DEGs = True, group_name = 'clu
         
         # the sqrt is to avoid putting too much weight to some odd dataset
         vec_score = df_cluster_score.values
-        vec_weights = np.sqrt(df_cluster_score.sum().values)
+        df_sum = df_cluster_score.sum().values
+        vec_weights = 2 * (1/ (1 + np.exp(- df_sum / np.mean(df_sum) )) - 0.5)
         
         
         all_values_mean = np.dot(vec_score, vec_weights) / np.sum(vec_weights)        
@@ -273,3 +274,37 @@ def plot_dotplot_gene(gene, dict_fraction_cells, dict_mean_exp, rotate=False):
     plt.plot([-0.3, len(dfplot_frac.columns) - 0.3], [-0.025, -0.025], c="#676767", linewidth=0.7, alpha=0.3)
     
 
+
+    
+    
+def plot_dotplot_list_genes(list_genes, dict_fraction_cells, dict_mean_exp, rotate=False, figsize=(10, 20)):
+    dfplot_frac = dict_fraction_cells[list_genes[0]] ** 0.66
+    
+    fig, ax = plt.subplots(1, 1,  figsize=figsize)
+    
+    ax.set_xticks(range(len(dfplot_frac.columns)))
+
+    if rotate:
+        ax.set_xticklabels(dfplot_frac.columns, rotation=40, ha='right')
+    else:
+        ax.set_xticklabels(dfplot_frac.columns)
+
+    ax.set_yticks(range(len(list_genes)))
+    ax.set_yticklabels(list_genes)
+    ax.set_ylim([-1.1, len(list_genes) + 0.1])
+    
+    for gene_idx, gene in enumerate(list_genes):
+        dfplot_frac = dict_fraction_cells[gene] ** 0.66
+        dfplot_exp = dict_mean_exp[gene] 
+        exp_norm_vals = (dfplot_exp.loc['Mean'] - min(dfplot_exp.loc['Mean'])) / (max(dfplot_exp.loc['Mean']) - min(dfplot_exp.loc['Mean']))
+        
+        ax.scatter(range(len(dfplot_frac.columns)), [gene_idx] * len(dfplot_frac.columns), s=dfplot_frac.loc['Mean'] * 550, 
+                   c=[cm.OrRd(i) for i in exp_norm_vals], linewidths=0.5, edgecolor='#878787', 
+                   alpha = [max(0, i) for i in 1 - dict_fraction_cells[gene].loc['Std'] ** 0.75])
+    
+    plt.gca().invert_yaxis()
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    
