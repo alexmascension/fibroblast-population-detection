@@ -203,7 +203,7 @@ def plot_score_graph(adatax, cluster_column='cluster'):
     sns.barplot(x='clusters', y='score', data=df_cats_own, palette=adatax.uns[f'{cluster_column}_colors'])
     
 
-def plot_UMAPS_gene(gene, list_datasets, list_names, n_cols=5, n_rows=None):
+def plot_UMAPS_gene(gene, list_datasets, list_names, n_cols=5, n_rows=None, cmap=magma):
     if n_rows is None:
         n_rows = int(math.ceil(len(list_datasets) / n_cols))
         
@@ -215,7 +215,7 @@ def plot_UMAPS_gene(gene, list_datasets, list_names, n_cols=5, n_rows=None):
     for adata, name, idx in zip(list_datasets, list_names, range(len(list_datasets))):
         try:
             sc.pl.umap(adata, color=[gene], legend_loc='on data', show=False, ax = axs.ravel()[idx], 
-                       title=name, size=15, cmap=magma, frameon=False, use_raw=False)
+                       title=name, size=15, cmap=cmap, frameon=False, use_raw=False)
         except:
             ...
             
@@ -277,7 +277,7 @@ def plot_dotplot_gene(gene, dict_fraction_cells, dict_mean_exp, rotate=False):
 
     
     
-def plot_dotplot_list_genes(list_genes, dict_fraction_cells, dict_mean_exp, rotate=False, figsize=(10, 20)):
+def plot_dotplot_list_genes(list_genes, dict_fraction_cells, dict_mean_exp, rotate=False, figsize=(10, 20), do_return=False):
     dfplot_frac = dict_fraction_cells[list_genes[0]] ** 0.66
     
     fig, ax = plt.subplots(1, 1,  figsize=figsize)
@@ -308,3 +308,5 @@ def plot_dotplot_list_genes(list_genes, dict_fraction_cells, dict_mean_exp, rota
     ax.spines['bottom'].set_visible(False)
     ax.spines['left'].set_visible(False)
     
+    if do_return:
+        return ax
