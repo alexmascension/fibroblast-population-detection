@@ -91,7 +91,7 @@ def make_gene_scoring(list_datasets=[], calculate_DEGs = True, group_name = 'clu
     # Calculate DEGs if necessary
     for adata in list_datasets:        
         if calculate_DEGs:
-            sc.tl.rank_genes_groups(adata, groupby=group_name, method='t-test_overestim_var')
+            sc.tl.rank_genes_groups(adata, groupby=group_name, method='t-test_overestim_var', use_raw=False)
     
     
     dict_scores = {}
