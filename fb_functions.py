@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import math
 import matplotlib.cm as cm
+from scipy.stats import combine_pvalues, gmean
 
 
 df_metadata = pd.read_csv('data/sample_metadata.csv', sep='\t')
@@ -187,6 +188,53 @@ def make_gene_scoring_with_expr(value_ref = 'scores', expr_type='expression_grou
         dict_return[cluster] = df_score.sort_values(by='Z', ascending=False)
     
     return dict_return
+
+
+def make_combined_table(list_datasets, list_names, group_name, list_clusters, dict_scoring_genes, N):
+    dict_tables = {}
+
+    for adata in list_datasets:        
+        sc.tl.rank_genes_groups(adata, groupby=group_name, method='t-test_overestim_var', use_raw=False)
+
+    for cluster in list_clusters:
+        genes = dict_scoring_genes[cluster].index[:N]
+        table_scores = pd.DataFrame(index=genes)
+
+        for name_adata, adata in zip(list_names, list_datasets):
+            if cluster in adata.obs['cluster_robust'].cat.categories:
+                df_rank_genes_groups = pd.DataFrame({'pval': adata.uns['rank_genes_groups']['pvals_adj'][cluster], 'LFC': adata.uns['rank_genes_groups']['logfoldchanges'][cluster], 'score': adata.uns['rank_genes_groups']['scores'][cluster]}, 
+                                                    index=adata.uns['rank_genes_groups']['names'][cluster])
+                available_genes = [i for i in genes if i in adata.var_names]
+
+                table_scores[f'{name_adata}_log_pval'] = np.NaN
+                table_scores[f'{name_adata}_LFC'] = np.NaN
+                table_scores[f'{name_adata}_score'] = np.NaN
+
+                table_scores.loc[available_genes, f'{name_adata}_log_pval'] = np.log10(df_rank_genes_groups.loc[available_genes, 'pval'])
+                table_scores.loc[available_genes, f'{name_adata}_LFC'] = df_rank_genes_groups.loc[available_genes, 'LFC']
+                table_scores.loc[available_genes, f'{name_adata}_score'] = df_rank_genes_groups.loc[available_genes, 'score']
+
+
+        # Create a combined p-value and logfold
+        table_scores[f'combined_log_pval'] = np.NaN
+        table_scores[f'combined_LFC'] = np.NaN
+
+        for gene in genes:
+            pvals = 10 ** table_scores.loc[gene, [f'{name_adata}_log_pval' for name_adata in list_names if f'{name_adata}_log_pval' in table_scores.columns]].values
+            _, combined_pval = combine_pvalues(pvals, nan_policy='omit', method='stouffer')
+            table_scores.loc[gene, f'combined_log_pval'] = np.log10(combined_pval)
+
+            lfc = table_scores.loc[gene, [f'{name_adata}_LFC' for name_adata in list_names if f'{name_adata}_LFC' in table_scores.columns]].values
+            # Compute the geometric mean
+            table_scores.loc[gene, f'combined_LFC'] = np.log2(gmean(2 ** lfc, nan_policy='omit'))
+
+        table_scores[['combined_score_mean', 'combined_score_dev', 'CV', 'gene_expr', 'Z']] = np.NaN
+        table_scores.loc[genes, ['combined_score_mean', 'combined_score_dev', 'CV', 'gene_expr', 'Z']] = dict_scoring_genes[cluster].loc[genes, ['mean', 'dev', 'CV', 'expr', 'Z']].values
+
+        dict_tables[cluster] = table_scores
+
+    return dict_tables
+
 
 
 def plot_score_graph(adatax, cluster_column='cluster'):
